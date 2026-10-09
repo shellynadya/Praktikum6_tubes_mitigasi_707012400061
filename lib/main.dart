@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import 'models/bencana_model.dart';
 import 'navigation/app_routes.dart';
 
 void main() {
-  runApp(const AplikasiMitigasi());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => BencanaModel(),
+      child: const AplikasiMitigasi(),
+    ),
+  );
 }
 
 class AplikasiMitigasi extends StatelessWidget {
