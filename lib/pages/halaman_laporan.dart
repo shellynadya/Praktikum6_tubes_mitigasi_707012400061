@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
-import '../models/bencana_model.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../cubit/bencana_cubit.dart';
 import '../navigation/app_routes.dart';
 
 class HalamanLaporan extends StatefulWidget {
@@ -49,9 +50,7 @@ class _HalamanLaporanState extends State<HalamanLaporan> {
       },
     );
 
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
     if (hasil is String) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -65,43 +64,44 @@ class _HalamanLaporanState extends State<HalamanLaporan> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<BencanaModel>(
-      builder: (context, model, child) {
-        return ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            const Text(
-              'Laporan Bencana',
-              style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+    return ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        const Text(
+          'Laporan Bencana',
+          style: TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
 
-            const SizedBox(height: 8),
+        const SizedBox(height: 8),
 
-            const Text(
-              'Pilih laporan untuk melihat informasi lebih lengkap.',
-              style: TextStyle(
-                color: Colors.grey,
-                fontSize: 15,
-              ),
-            ),
+        const Text(
+          'Pilih laporan untuk melihat informasi lebih lengkap.',
+          style: TextStyle(
+            color: Colors.grey,
+            fontSize: 15,
+          ),
+        ),
 
-            const SizedBox(height: 24),
+        const SizedBox(height: 24),
 
-            const Text(
-              'Bencana yang Dipantau',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+        const Text(
+          'Bencana yang Dipantau',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
 
-            const SizedBox(height: 12),
+        const SizedBox(height: 12),
 
-            if (model.dipantau.isEmpty)
-              Card(
+        // State bersama menggunakan Cubit
+        BlocBuilder<BencanaCubit, Set<String>>(
+          builder: (context, dipantau) {
+            if (dipantau.isEmpty) {
+              return Card(
                 child: Padding(
                   padding: const EdgeInsets.all(18),
                   child: Row(
@@ -119,139 +119,127 @@ class _HalamanLaporanState extends State<HalamanLaporan> {
                     ],
                   ),
                 ),
-              )
-            else
-              ...model.dipantau.map(
-                (namaBencana) {
-                  return Card(
-                    child: ListTile(
-                      leading: const Icon(
-                        Icons.star,
-                        color: Colors.amber,
-                      ),
-                      title: Text(
-                        namaBencana,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      subtitle: const Text(
-                        'Sedang dipantau',
-                      ),
-                      trailing: IconButton(
-                        icon: const Icon(
-                          Icons.close,
-                        ),
-                        onPressed: () {
-                          context
-                              .read<BencanaModel>()
-                              .hapusPantauan(namaBencana);
-                        },
+              );
+            }
+
+            return Column(
+              children: dipantau.map((namaBencana) {
+                return Card(
+                  child: ListTile(
+                    leading: const Icon(
+                      Icons.star,
+                      color: Colors.amber,
+                    ),
+                    title: Text(
+                      namaBencana,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  );
-                },
-              ),
-
-            const SizedBox(height: 24),
-
-            const Text(
-              'Daftar Laporan',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            ..._daftarLaporan.map(
-              (data) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 14),
-                  child: Card(
-                    elevation: 2,
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.all(16),
-
-                      leading: Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
-                          borderRadius:
-                              BorderRadius.circular(14),
-                        ),
-                        child: const Icon(
-                          Icons.report_outlined,
-                          color: Colors.blue,
-                          size: 28,
-                        ),
-                      ),
-
-                      title: Text(
-                        data['namaBencana']!,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-
-                      subtitle: Padding(
-                        padding: const EdgeInsets.only(top: 6),
-                        child: Text(
-                          data['lokasi']!,
-                        ),
-                      ),
-
-                      trailing: const Icon(
-                        Icons.chevron_right,
-                      ),
-
-                      onTap: () {
-                        _bukaDetail(data);
+                    subtitle: const Text(
+                      'Sedang dipantau',
+                    ),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () {
+                        context
+                            .read<BencanaCubit>()
+                            .hapusPantauan(namaBencana);
                       },
                     ),
                   ),
                 );
-              },
+              }).toList(),
+            );
+          },
+        ),
+
+        const SizedBox(height: 24),
+
+        const Text(
+          'Daftar Laporan',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        ..._daftarLaporan.map((data) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 14),
+            child: Card(
+              elevation: 2,
+              child: ListTile(
+                contentPadding: const EdgeInsets.all(16),
+                leading: Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(
+                    Icons.report_outlined,
+                    color: Colors.blue,
+                    size: 28,
+                  ),
+                ),
+                title: Text(
+                  data['namaBencana']!,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                subtitle: Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(data['lokasi']!),
+                ),
+                trailing: const Icon(
+                  Icons.chevron_right,
+                ),
+                onTap: () {
+                  _bukaDetail(data);
+                },
+              ),
             ),
+          );
+        }),
 
-            const SizedBox(height: 10),
+        const SizedBox(height: 10),
 
-            Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: Colors.orange.shade50,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: Colors.orange.shade200,
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: Colors.orange.shade50,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.orange.shade200,
+            ),
+          ),
+          child: const Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.info_outline,
+                color: Colors.orange,
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Gunakan fitur laporan untuk menyampaikan '
+                  'informasi mengenai kondisi bencana di sekitar '
+                  'Kota Palu.',
+                  style: TextStyle(
+                    height: 1.4,
+                  ),
                 ),
               ),
-              child: const Row(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    color: Colors.orange,
-                  ),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Gunakan fitur laporan untuk menyampaikan '
-                      'informasi mengenai kondisi bencana di sekitar '
-                      'Kota Palu.',
-                      style: TextStyle(
-                        height: 1.4,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

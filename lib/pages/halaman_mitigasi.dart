@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
-import '../models/bencana_model.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../cubit/bencana_cubit.dart';
 import '../navigation/app_routes.dart';
 
 class HalamanMitigasi extends StatefulWidget {
@@ -91,7 +92,6 @@ class _HalamanMitigasiState extends State<HalamanMitigasi> {
             index: _tabTerpilih,
             children: [
               _daftarBencana(
-                context,
                 [
                   {
                     'nama': 'Gempa Bumi',
@@ -119,7 +119,6 @@ class _HalamanMitigasiState extends State<HalamanMitigasi> {
                 ],
               ),
               _daftarBencana(
-                context,
                 [
                   {
                     'nama': 'Tsunami',
@@ -146,7 +145,6 @@ class _HalamanMitigasiState extends State<HalamanMitigasi> {
                 ],
               ),
               _daftarBencana(
-                context,
                 [
                   {
                     'nama': 'Banjir',
@@ -181,72 +179,62 @@ class _HalamanMitigasiState extends State<HalamanMitigasi> {
   }
 
   Widget _daftarBencana(
-    BuildContext context,
     List<Map<String, String>> daftar,
   ) {
-    return Consumer<BencanaModel>(
-      builder: (context, model, child) {
-        return ListView.separated(
-          padding: const EdgeInsets.all(16),
-          itemCount: daftar.length,
-          separatorBuilder: (context, index) {
-            return const SizedBox(height: 12);
-          },
-          itemBuilder: (context, index) {
-            final data = daftar[index];
-            final namaBencana = data['nama']!;
+    return ListView.separated(
+      padding: const EdgeInsets.all(16),
+      itemCount: daftar.length,
+      separatorBuilder: (context, index) {
+        return const SizedBox(height: 12);
+      },
+      itemBuilder: (context, index) {
+        final data = daftar[index];
+        final namaBencana = data['nama']!;
 
-            final sedangDipantau =
-                model.sedangDipantau(namaBencana);
-
-            return Card(
-              elevation: 2,
-              child: ListTile(
-                contentPadding: const EdgeInsets.all(16),
-
-                leading: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.shield_outlined,
-                    color: Colors.blue,
-                    size: 28,
-                  ),
-                ),
-
-                title: Text(
-                  namaBencana,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-
-                subtitle: Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Text(data['lokasi']!),
-                ),
-
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
+        return Card(
+          elevation: 2,
+          child: ListTile(
+            contentPadding: const EdgeInsets.all(16),
+            leading: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.shield_outlined,
+                color: Colors.blue,
+                size: 28,
+              ),
+            ),
+            title: Text(
+              namaBencana,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(data['lokasi']!),
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                BlocSelector<BencanaCubit, Set<String>, bool>(
+                  selector: (state) =>
+                      state.contains(namaBencana),
+                  builder: (context, sedangDipantau) {
+                    return IconButton(
                       onPressed: () {
-                        final provider =
-                            context.read<BencanaModel>();
+                        final cubit =
+                            context.read<BencanaCubit>();
 
                         if (sedangDipantau) {
-                          provider.hapusPantauan(
-                            namaBencana,
-                          );
+                          cubit.hapusPantauan(namaBencana);
                         } else {
-                          provider.tambahPantauan(
-                            namaBencana,
-                          );
+                          cubit.tambahPantauan(namaBencana);
                         }
                       },
                       icon: Icon(
@@ -257,26 +245,24 @@ class _HalamanMitigasiState extends State<HalamanMitigasi> {
                             ? Colors.amber
                             : null,
                       ),
-                    ),
-
-                    const Icon(Icons.chevron_right),
-                  ],
+                    );
+                  },
                 ),
-
-                onTap: () {
-                  Navigator.pushNamed(
-                    context,
-                    AppRoutes.detail,
-                    arguments: {
-                      'namaBencana': namaBencana,
-                      'lokasi': data['lokasi']!,
-                      'keterangan': data['keterangan']!,
-                    },
-                  );
+                const Icon(Icons.chevron_right),
+              ],
+            ),
+            onTap: () {
+              Navigator.pushNamed(
+                context,
+                AppRoutes.detail,
+                arguments: {
+                  'namaBencana': namaBencana,
+                  'lokasi': data['lokasi']!,
+                  'keterangan': data['keterangan']!,
                 },
-              ),
-            );
-          },
+              );
+            },
+          ),
         );
       },
     );
