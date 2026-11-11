@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../pages/halaman_beranda.dart';
 import '../pages/halaman_laporan.dart';
 import '../pages/halaman_mitigasi.dart';
+import '../pages/halaman_pengaturan.dart';
 import 'app_routes.dart';
 
 class KerangkaNavigasi extends StatefulWidget {
@@ -13,20 +14,21 @@ class KerangkaNavigasi extends StatefulWidget {
       _KerangkaNavigasiState();
 }
 
-class _KerangkaNavigasiState
-    extends State<KerangkaNavigasi> {
+class _KerangkaNavigasiState extends State<KerangkaNavigasi> {
   int _indeksTerpilih = 0;
 
   final List<Widget> _halaman = const [
     HalamanBeranda(),
     HalamanMitigasi(),
     HalamanLaporan(),
+    HalamanPengaturan(),
   ];
 
   final List<String> _judul = const [
     'Beranda',
     'Mitigasi',
     'Laporan',
+    'Pengaturan',
   ];
 
   void _pilihTujuan(int indeks) {
@@ -37,9 +39,7 @@ class _KerangkaNavigasiState
 
   @override
   Widget build(BuildContext context) {
-    final double lebar =
-        MediaQuery.of(context).size.width;
-
+    final double lebar = MediaQuery.of(context).size.width;
     final bool layarLebar = lebar >= 600;
 
     return Scaffold(
@@ -47,18 +47,20 @@ class _KerangkaNavigasiState
         title: Text(_judul[_indeksTerpilih]),
       ),
 
-      // Drawer untuk menu utama dan menu pendukung.
+      // Drawer untuk menu utama dan pendukung
       drawer: _buatDrawer(),
 
       body: layarLebar
           ? _tataLetakLebar()
           : _halaman[_indeksTerpilih],
 
-      bottomNavigationBar:
-          layarLebar ? null : _buatBilahBawah(),
+      bottomNavigationBar: layarLebar
+          ? null
+          : _buatBilahBawah(),
     );
   }
 
+  // Navigasi bawah untuk layar kecil
   Widget _buatBilahBawah() {
     return NavigationBar(
       selectedIndex: _indeksTerpilih,
@@ -79,10 +81,16 @@ class _KerangkaNavigasiState
           selectedIcon: Icon(Icons.report),
           label: 'Laporan',
         ),
+        NavigationDestination(
+          icon: Icon(Icons.settings_outlined),
+          selectedIcon: Icon(Icons.settings),
+          label: 'Pengaturan',
+        ),
       ],
     );
   }
 
+  // NavigationRail untuk layar lebar
   Widget _tataLetakLebar() {
     return Row(
       children: [
@@ -115,6 +123,11 @@ class _KerangkaNavigasiState
               selectedIcon: Icon(Icons.report),
               label: Text('Laporan'),
             ),
+            NavigationRailDestination(
+              icon: Icon(Icons.settings_outlined),
+              selectedIcon: Icon(Icons.settings),
+              label: Text('Pengaturan'),
+            ),
           ],
         ),
 
@@ -130,12 +143,15 @@ class _KerangkaNavigasiState
     );
   }
 
+  // Drawer untuk navigasi tambahan
   Widget _buatDrawer() {
     return NavigationDrawer(
       selectedIndex: _indeksTerpilih,
       onDestinationSelected: (indeks) {
-        _pilihTujuan(indeks);
-        Navigator.pop(context);
+        if (indeks >= 0 && indeks < _halaman.length) {
+          _pilihTujuan(indeks);
+          Navigator.pop(context);
+        }
       },
       children: [
         const UserAccountsDrawerHeader(
@@ -179,6 +195,12 @@ class _KerangkaNavigasiState
           label: Text('Laporan'),
         ),
 
+        const NavigationDrawerDestination(
+          icon: Icon(Icons.settings_outlined),
+          selectedIcon: Icon(Icons.settings),
+          label: Text('Pengaturan'),
+        ),
+
         const Divider(
           indent: 28,
           endIndent: 28,
@@ -201,27 +223,11 @@ class _KerangkaNavigasiState
 
         ListTile(
           leading: const Icon(
-            Icons.settings_outlined,
-          ),
-          title: const Text('Pengaturan'),
-          onTap: () {
-            Navigator.pop(context);
-
-            Navigator.pushNamed(
-              context,
-              AppRoutes.pengaturan,
-            );
-          },
-        ),
-
-        ListTile(
-          leading: const Icon(
             Icons.info_outline,
           ),
           title: const Text('Tentang Aplikasi'),
           onTap: () {
             Navigator.pop(context);
-
             Navigator.pushNamed(
               context,
               AppRoutes.tentang,
@@ -236,7 +242,6 @@ class _KerangkaNavigasiState
           title: const Text('Keluar'),
           onTap: () {
             Navigator.pop(context);
-
             _tampilkanDialogKeluar();
           },
         ),
@@ -247,7 +252,7 @@ class _KerangkaNavigasiState
   void _tampilkanDialogKeluar() {
     showDialog<void>(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           title: const Text('Keluar'),
           content: const Text(
@@ -257,16 +262,15 @@ class _KerangkaNavigasiState
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pop(dialogContext);
               },
               child: const Text('Batal'),
             ),
             ElevatedButton(
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pop(dialogContext);
 
-                ScaffoldMessenger.of(this.context)
-                    .showSnackBar(
+                ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text(
                       'Fitur keluar masih dalam tahap pengembangan.',

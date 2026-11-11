@@ -1,4 +1,7 @@
+
 import 'package:flutter/material.dart';
+
+import '../widgets/theme_toggle_card.dart';
 
 class HalamanPengaturan extends StatefulWidget {
   const HalamanPengaturan({super.key});
@@ -11,93 +14,75 @@ class HalamanPengaturan extends StatefulWidget {
 class _HalamanPengaturanState
     extends State<HalamanPengaturan> {
   bool _notifikasiAktif = true;
-  bool _modeGelap = false;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Pengaturan Kota'),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'Pengaturan Aplikasi',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+    final tema = Theme.of(context);
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Text(
+          'Pengaturan Aplikasi',
+          style: tema.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
           ),
+        ),
 
-          const SizedBox(height: 8),
+        const SizedBox(height: 8),
 
-          const Text(
-            'Atur preferensi aplikasi Mitigasi+.',
-            style: TextStyle(
-              color: Colors.grey,
-            ),
+        Text(
+          'Atur preferensi aplikasi Mitigasi+.',
+          style: tema.textTheme.bodyMedium?.copyWith(
+            color: tema.colorScheme.onSurfaceVariant,
           ),
+        ),
 
-          const SizedBox(height: 24),
+        const SizedBox(height: 24),
 
-          Card(
-            child: SwitchListTile(
-              secondary: const Icon(
-                Icons.notifications_outlined,
-              ),
-              title: const Text('Notifikasi'),
-              subtitle: const Text(
-                'Terima informasi dan peringatan bencana.',
-              ),
-              value: _notifikasiAktif,
-              onChanged: (value) {
-                setState(() {
-                  _notifikasiAktif = value;
-                });
-              },
+        // Pengaturan Notifikasi
+        Card(
+          child: SwitchListTile(
+            secondary: Icon(
+              Icons.notifications_outlined,
+              color: tema.colorScheme.primary,
             ),
-          ),
-
-          const SizedBox(height: 12),
-
-          Card(
-            child: SwitchListTile(
-              secondary: const Icon(
-                Icons.dark_mode_outlined,
-              ),
-              title: const Text('Mode Gelap'),
-              subtitle: const Text(
-                'Gunakan tampilan gelap pada aplikasi.',
-              ),
-              value: _modeGelap,
-              onChanged: (value) {
-                setState(() {
-                  _modeGelap = value;
-                });
-              },
+            title: const Text('Notifikasi'),
+            subtitle: const Text(
+              'Terima informasi dan peringatan bencana.',
             ),
+            value: _notifikasiAktif,
+            onChanged: (value) {
+              setState(() {
+                _notifikasiAktif = value;
+              });
+            },
           ),
+        ),
 
-          const SizedBox(height: 12),
+        const SizedBox(height: 12),
 
-          Card(
-            child: ListTile(
-              leading: const Icon(
-                Icons.location_on_outlined,
-              ),
-              title: const Text('Wilayah'),
-              subtitle: const Text(
-                'Kota Palu',
-              ),
-              trailing: const Icon(
-                Icons.chevron_right,
-              ),
-              onTap: () {},
+        // Custom Widget Mode Gelap
+        const ThemeToggleCard(),
+
+        const SizedBox(height: 12),
+
+        // Pengaturan Wilayah
+        Card(
+          child: ListTile(
+            leading: Icon(
+              Icons.location_on_outlined,
+              color: tema.colorScheme.primary,
             ),
+            title: const Text('Wilayah'),
+            subtitle: const Text('Kota Palu'),
+            trailing: const Icon(
+              Icons.chevron_right,
+            ),
+            onTap: () {},
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
